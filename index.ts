@@ -3,11 +3,17 @@ import { join } from 'path';
 import { mkdirSync, existsSync, unlinkSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
 import blessed from 'blessed';
+import pino from 'pino';
 
 const SAMPLE_RATE = 16000;
 const TEMP_DIR = join(process.cwd(), 'temp');
 const MODEL_NAME = 'base.en';
 const CHUNK_DURATION = 3;
+
+const logger = pino({
+  level: 'error',
+  base: undefined
+});
 
 let deviceInfo = 'Detecting...';
 let deviceInfoReceived = false;
@@ -98,14 +104,13 @@ const createTUI = () => {
     status: string;
     time: string;
     device: string;
-    chunks: number;
-    queue: number;
+    tokensPerSecond: string;
   }) => {
     const statusColor = stats.status.includes('Recording') ? 'green' : 'yellow';
     const deviceColor = stats.device.includes('GPU') ? 'green' : 'cyan';
 
     statsBox.setContent(
-      `{${statusColor}-fg}Status:{/} ${stats.status}  {yellow-fg}Time:{/} ${stats.time}  {${deviceColor}-fg}Device:{/} ${stats.device}  {blue-fg}Chunks:{/} ${stats.chunks}  {magenta-fg}Queue:{/} ${stats.queue}`
+      `{${statusColor}-fg}Status:{/} ${stats.status}  {yellow-fg}Time:{/} ${stats.time}  {${deviceColor}-fg}Device:{/} ${stats.device}  {blue-fg}Tokens/s:{/} ${stats.tokensPerSecond}`
     );
     screen.render();
   };
@@ -133,7 +138,12 @@ const createTUI = () => {
     return transcriptionBuffer.join(' ');
   };
 
-  return { updateStats, addTranscription, render, destroy, screen, getAllTranscriptions };
+  const getWordCount = (): number => {
+    const fullText = transcriptionBuffer.join(' ');
+    return fullText ? fullText.split(/\s+/).filter(word => word.length > 0).length : 0;
+  };
+
+  return { updateStats, addTranscription, render, destroy, screen, getAllTranscriptions, getWordCount };
 };
 
 const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void) => {
@@ -337,6 +347,64 @@ const createStreamingTranscriber = (onTranscription: (text: string) => void) => 
   return { addChunk, getQueueSize };
 };
 
+const handleExit = (
+  updateInterval: NodeJS.Timeout,
+  recorder: ReturnType<typeof createStreamingRecorder>,
+  transcriber: ReturnType<typeof createStreamingTranscriber>,
+  tui: ReturnType<typeof createTUI>
+) => {
+  clearInterval(updateInterval);
+  recorder.stop();
+
+  const elapsedSeconds = recorder.getElapsedSeconds();
+  const finalStats = {
+    time: recorder.getElapsedTime(),
+    elapsedSeconds,
+    device: deviceInfo,
+    chunks: recorder.getChunkCount(),
+    queue: transcriber.getQueueSize()
+  };
+
+  setTimeout(() => {
+    tui.destroy();
+
+    const fullTranscription = tui.getAllTranscriptions();
+    const wordCount = fullTranscription ? fullTranscription.split(/\s+/).filter(word => word.length > 0).length : 0;
+    const wordsPerSecond = elapsedSeconds > 0 ? (wordCount / elapsedSeconds).toFixed(2) : '0.00';
+
+    if (fullTranscription) {
+      const resultPath = join(process.cwd(), 'result.txt');
+      writeFileSync(resultPath, fullTranscription, 'utf-8');
+
+      const pbcopy = spawn('pbcopy');
+      pbcopy.stdin.write(fullTranscription);
+      pbcopy.stdin.end();
+    }
+
+    console.log(chalk.yellow('\n🛑 Recording stopped'));
+    console.log(chalk.gray('─'.repeat(40)));
+
+    if (fullTranscription) {
+      console.log(chalk.cyan('Transcription:'));
+      console.log(fullTranscription);
+      console.log(chalk.gray('─'.repeat(40)));
+    }
+
+    console.log(chalk.cyan('Summary:'));
+    console.log(chalk.gray(`  Recorded time: ${finalStats.time}`));
+    console.log(chalk.gray(`  Words: ${wordCount}`));
+    console.log(chalk.gray(`  Words/s: ${wordsPerSecond}`));
+    console.log();
+    console.log(chalk.cyan('Details:'));
+    console.log(chalk.gray(`  Device: ${finalStats.device}`));
+    console.log(chalk.gray(`  Chunks processed: ${finalStats.chunks}`));
+    console.log(chalk.gray(`  Queue remaining: ${finalStats.queue}`));
+    console.log(chalk.gray('─'.repeat(40)));
+    console.log(chalk.green('✅ Goodbye!\n'));
+    process.exit(0);
+  }, 500);
+};
+
 const main = async (): Promise<void> => {
   ensureTempDir();
 
@@ -351,67 +419,22 @@ const main = async (): Promise<void> => {
   });
 
   const updateInterval = setInterval(() => {
+    const elapsedSeconds = recorder.getElapsedSeconds();
+    const wordCount = tui.getWordCount();
+    const tokensPerSecond = elapsedSeconds > 0 ? (wordCount / elapsedSeconds).toFixed(2) : '0.00';
+
     tui.updateStats({
       status: 'Recording',
       time: recorder.getElapsedTime(),
       device: deviceInfo,
-      chunks: recorder.getChunkCount(),
-      queue: transcriber.getQueueSize()
+      tokensPerSecond
     });
   }, 100);
 
-  process.on('SIGINT', () => {
-    clearInterval(updateInterval);
-    recorder.stop();
+  const exitHandler = () => handleExit(updateInterval, recorder, transcriber, tui);
 
-    const elapsedSeconds = recorder.getElapsedSeconds();
-    const finalStats = {
-      time: recorder.getElapsedTime(),
-      elapsedSeconds,
-      device: deviceInfo,
-      chunks: recorder.getChunkCount(),
-      queue: transcriber.getQueueSize()
-    };
-
-    setTimeout(() => {
-      tui.destroy();
-
-      const fullTranscription = tui.getAllTranscriptions();
-      const wordCount = fullTranscription ? fullTranscription.split(/\s+/).filter(word => word.length > 0).length : 0;
-      const wordsPerSecond = elapsedSeconds > 0 ? (wordCount / elapsedSeconds).toFixed(2) : '0.00';
-
-      if (fullTranscription) {
-        const resultPath = join(process.cwd(), 'result.txt');
-        writeFileSync(resultPath, fullTranscription, 'utf-8');
-
-        const pbcopy = spawn('pbcopy');
-        pbcopy.stdin.write(fullTranscription);
-        pbcopy.stdin.end();
-      }
-
-      console.log(chalk.yellow('\n🛑 Recording stopped'));
-      console.log(chalk.gray('─'.repeat(40)));
-
-      if (fullTranscription) {
-        console.log(chalk.cyan('Transcription:'));
-        console.log(fullTranscription);
-        console.log(chalk.gray('─'.repeat(40)));
-      }
-
-      console.log(chalk.cyan('Summary:'));
-      console.log(chalk.gray(`  Recorded time: ${finalStats.time}`));
-      console.log(chalk.gray(`  Words: ${wordCount}`));
-      console.log(chalk.gray(`  Words/s: ${wordsPerSecond}`));
-      console.log();
-      console.log(chalk.cyan('Details:'));
-      console.log(chalk.gray(`  Device: ${finalStats.device}`));
-      console.log(chalk.gray(`  Chunks processed: ${finalStats.chunks}`));
-      console.log(chalk.gray(`  Queue remaining: ${finalStats.queue}`));
-      console.log(chalk.gray('─'.repeat(40)));
-      console.log(chalk.green('✅ Goodbye!\n'));
-      process.exit(0);
-    }, 500);
-  });
+  tui.screen.key(['C-c'], exitHandler);
+  process.on('SIGINT', exitHandler);
 
   recorder.start();
   tui.render();
