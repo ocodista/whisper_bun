@@ -1,6 +1,6 @@
 # Whisper Bun
 
-[![CI](https://github.com/caioborghi/whisper_bun/workflows/CI/badge.svg)](https://github.com/caioborghi/whisper_bun/actions/workflows/ci.yml)
+[![CI](https://github.com/ocodista/whisper_bun/actions/workflows/ci.yml/badge.svg)](https://github.com/ocodista/whisper_bun/actions/workflows/ci.yml)
 
 Transcribe speech to text in real-time. Speak, see text appear instantly, copy it automatically.
 
