@@ -2,11 +2,11 @@
   "name": "whisper_bun",
   "description": "Streaming microphone transcription using Bun and Faster Whisper",
   "version": "1.0.0",
-  "module": "index.ts",
+  "module": "src/index.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "bun run index.ts",
+    "start": "bun run src/index.ts",
     "test": "bun test",
     "test:unit": "bun test index.test.ts",
     "test:integration": "bun test integration.test.ts",

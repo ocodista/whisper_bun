@@ -10,14 +10,134 @@ Optimized for Apple Silicon, CUDA GPUs, and standard CPUs.
 
 ## Quick Start
 
+<details>
+<summary><strong>macOS</strong></summary>
+
+### Prerequisites
+
+1. **Install Bun** ([https://bun.sh](https://bun.sh))
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+2. **Install SoX** ([http://sox.sourceforge.net](http://sox.sourceforge.net))
+   ```bash
+   brew install sox
+   ```
+
+3. **Install Python 3.8+** (usually pre-installed on macOS)
+   ```bash
+   python3 --version
+   ```
+   If not installed: `brew install python3`
+
+### Setup and Run
+
 ```bash
-brew install sox
 bun install
 ./setup-whisper.sh
 bun run start
 ```
 
 Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
+
+</details>
+
+<details>
+<summary><strong>Linux</strong></summary>
+
+### Prerequisites
+
+1. **Install Bun** ([https://bun.sh](https://bun.sh))
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+2. **Install SoX**
+
+   **Ubuntu/Debian:**
+   ```bash
+   sudo apt-get update
+   sudo apt-get install sox libsox-fmt-all
+   ```
+
+   **Fedora/RHEL:**
+   ```bash
+   sudo dnf install sox
+   ```
+
+   **Arch:**
+   ```bash
+   sudo pacman -S sox
+   ```
+
+3. **Install Python 3.8+**
+
+   **Ubuntu/Debian:**
+   ```bash
+   sudo apt-get install python3 python3-pip python3-venv
+   ```
+
+   **Fedora/RHEL:**
+   ```bash
+   sudo dnf install python3 python3-pip
+   ```
+
+   **Arch:**
+   ```bash
+   sudo pacman -S python python-pip
+   ```
+
+### Setup and Run
+
+```bash
+bun install
+./setup-whisper.sh
+bun run start
+```
+
+Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
+
+</details>
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+### Prerequisites
+
+1. **Install Bun** ([https://bun.sh](https://bun.sh))
+   ```powershell
+   powershell -c "irm bun.sh/install.ps1 | iex"
+   ```
+
+2. **Install SoX** ([http://sox.sourceforge.net](http://sox.sourceforge.net))
+   - Download from [SourceForge](https://sourceforge.net/projects/sox/files/sox/)
+   - Or use Chocolatey:
+     ```powershell
+     choco install sox.portable
+     ```
+   - Or use Scoop:
+     ```powershell
+     scoop install sox
+     ```
+
+3. **Install Python 3.8+** ([https://www.python.org/downloads](https://www.python.org/downloads))
+   - Download and install from official website
+   - Make sure to check "Add Python to PATH" during installation
+
+### Setup and Run
+
+```bash
+bun install
+bash setup-whisper.sh
+bun run start
+```
+
+Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
+
+**Note:** On Windows, you may need to run commands in Git Bash or WSL for the setup script to work properly.
+
+</details>
 
 ## How It Works
 
@@ -46,7 +166,7 @@ Verification: Check `transcribe.py` lines 46-56 for platform detection logic.
 
 ## Configuration
 
-Edit `index.ts` constants:
+Edit `src/config/constants.ts`:
 
 - `CHUNK_DURATION`: Recording length in seconds (default: 3)
 - `MODEL_NAME`: Whisper model size (default: 'base.en')
