@@ -1,6 +1,6 @@
 import { unlinkSync } from 'fs';
 import chalk from 'chalk';
-import type { ChunkInfo } from '../types/transcription';
+import type { ChunkInfo } from '../types';
 import { transcribeChunk } from './transcriber';
 
 export const createStreamingTranscriber = (onTranscription: (text: string) => void) => {

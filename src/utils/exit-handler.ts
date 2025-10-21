@@ -2,9 +2,9 @@ import { join } from 'path';
 import { writeFileSync } from 'fs';
 import chalk from 'chalk';
 import clipboardy from 'clipboardy';
-import { createStreamingRecorder } from '../recording/streaming-recorder';
+import { createStreamingRecorder } from '../streaming-recorder';
 import { createStreamingTranscriber } from '../transcription/streaming-transcriber';
-import { createTUI } from '../ui/tui';
+import { createTUI } from '../tui';
 import { getDeviceInfo } from '../transcription/transcriber';
 
 export const handleExit = (

@@ -1,8 +1,8 @@
 import { spawn, ChildProcess } from 'child_process';
 import { join } from 'path';
 import chalk from 'chalk';
-import { SAMPLE_RATE, TEMP_DIR, CHUNK_DURATION } from '../config/constants';
-import type { ChunkInfo } from '../types/transcription';
+import { SAMPLE_RATE, TEMP_DIR, CHUNK_DURATION } from './constants';
+import type { ChunkInfo } from './types';
 
 export const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void) => {
   let soxProcess: ChildProcess | null = null;

@@ -1,8 +1,8 @@
 import { spawn } from 'child_process';
 import { join } from 'path';
 import { existsSync } from 'fs';
-import type { ChunkInfo, TranscriptionResult } from '../types/transcription';
-import { MODEL_NAME } from '../config/constants';
+import type { ChunkInfo, TranscriptionResult } from '../types';
+import { MODEL_NAME } from '../constants';
 
 let deviceInfo = 'Detecting...';
 let deviceInfoReceived = false;

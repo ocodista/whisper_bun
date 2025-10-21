@@ -1,8 +1,8 @@
 import chalk from 'chalk';
 import { ensureTempDir } from './utils/file-system';
-import { createTUI } from './ui/tui';
+import { createTUI } from './tui';
 import { createStreamingTranscriber } from './transcription/streaming-transcriber';
-import { createStreamingRecorder } from './recording/streaming-recorder';
+import { createStreamingRecorder } from './streaming-recorder';
 import { handleExit } from './utils/exit-handler';
 import { getDeviceInfo } from './transcription/transcriber';
 

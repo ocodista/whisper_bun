@@ -1,5 +1,5 @@
 import { mkdirSync, existsSync } from 'fs';
-import { TEMP_DIR } from '../config/constants';
+import { TEMP_DIR } from '../constants';
 
 export const ensureTempDir = (): void => {
   if (!existsSync(TEMP_DIR)) {
