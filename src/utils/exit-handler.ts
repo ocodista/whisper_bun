@@ -1,4 +1,3 @@
-import { join } from 'path';
 import { writeFileSync } from 'fs';
 import chalk from 'chalk';
 import clipboardy from 'clipboardy';
@@ -6,23 +5,28 @@ import { createStreamingRecorder } from '../streaming-recorder';
 import { createStreamingTranscriber } from '../transcription/streaming-transcriber';
 import { createTUI } from '../tui';
 import { getDeviceInfo } from '../transcription/transcriber';
+import type { Logger } from '../logger';
 
 export const handleExit = (
   updateInterval: NodeJS.Timeout,
   recorder: ReturnType<typeof createStreamingRecorder>,
   transcriber: ReturnType<typeof createStreamingTranscriber>,
-  tui: ReturnType<typeof createTUI>
+  tui: ReturnType<typeof createTUI>,
+  outputFile: string,
+  logger: Logger
 ) => {
   clearInterval(updateInterval);
   recorder.stop();
 
   const elapsedSeconds = recorder.getElapsedSeconds();
+  const failedDeletions = transcriber.getFailedDeletions();
   const finalStats = {
     time: recorder.getElapsedTime(),
     elapsedSeconds,
     device: getDeviceInfo(),
     chunks: recorder.getChunkCount(),
-    queue: transcriber.getQueueSize()
+    queue: transcriber.getQueueSize(),
+    failedDeletions: failedDeletions.length
   };
 
   setTimeout(() => {
@@ -33,10 +37,11 @@ export const handleExit = (
     const wordsPerSecond = elapsedSeconds > 0 ? (wordCount / elapsedSeconds).toFixed(2) : '0.00';
 
     if (fullTranscription) {
-      const resultPath = join(process.cwd(), 'result.txt');
-      writeFileSync(resultPath, fullTranscription, 'utf-8');
+      logger.info(`Writing transcription to ${outputFile}`);
+      writeFileSync(outputFile, fullTranscription, 'utf-8');
 
       clipboardy.writeSync(fullTranscription);
+      logger.info('Transcription copied to clipboard');
     }
 
     console.log(chalk.yellow('\n🛑 Recording stopped'));
@@ -57,6 +62,12 @@ export const handleExit = (
     console.log(chalk.gray(`  Device: ${finalStats.device}`));
     console.log(chalk.gray(`  Chunks processed: ${finalStats.chunks}`));
     console.log(chalk.gray(`  Queue remaining: ${finalStats.queue}`));
+
+    if (finalStats.failedDeletions > 0) {
+      console.log(chalk.yellow(`  ⚠️  Failed file deletions: ${finalStats.failedDeletions}`));
+      logger.warn(`Failed to delete ${finalStats.failedDeletions} chunk file(s). Manual cleanup may be needed.`);
+    }
+
     console.log(chalk.gray('─'.repeat(40)));
     console.log(chalk.green('✅ Goodbye!\n'));
     process.exit(0);

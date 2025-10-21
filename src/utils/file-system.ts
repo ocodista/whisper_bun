@@ -1,8 +1,7 @@
 import { mkdirSync, existsSync } from 'fs';
-import { TEMP_DIR } from '../constants';
 
-export const ensureTempDir = (): void => {
-  if (!existsSync(TEMP_DIR)) {
-    mkdirSync(TEMP_DIR, { recursive: true });
+export const ensureTempDir = (tempDir: string): void => {
+  if (!existsSync(tempDir)) {
+    mkdirSync(tempDir, { recursive: true });
   }
 };

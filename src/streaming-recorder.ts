@@ -1,10 +1,16 @@
 import { spawn, ChildProcess } from 'child_process';
 import { join } from 'path';
 import chalk from 'chalk';
-import { SAMPLE_RATE, TEMP_DIR, CHUNK_DURATION } from './constants';
 import type { ChunkInfo } from './types';
+import type { Logger } from './logger';
 
-export const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void) => {
+export const createStreamingRecorder = (
+  onChunkReady: (chunk: ChunkInfo) => void,
+  sampleRate: number,
+  tempDir: string,
+  chunkDuration: number,
+  logger: Logger
+) => {
   let soxProcess: ChildProcess | null = null;
   let currentChunkNumber = 0;
   let isRecording = false;
@@ -33,17 +39,19 @@ export const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void
     }
 
     currentChunkNumber++;
-    currentChunkPath = join(TEMP_DIR, `chunk-${Date.now()}-${currentChunkNumber}.wav`);
+    currentChunkPath = join(tempDir, `chunk-${Date.now()}-${currentChunkNumber}.wav`);
     chunkStartTime = Date.now();
+
+    logger.debug(`Recording chunk ${currentChunkNumber} to ${currentChunkPath}`);
 
     soxProcess = spawn('sox', [
       '-d',
       '-t', 'wav',
-      '-r', SAMPLE_RATE.toString(),
+      '-r', sampleRate.toString(),
       '-c', '1',
       '-b', '16',
       currentChunkPath,
-      'trim', '0', CHUNK_DURATION.toString()
+      'trim', '0', chunkDuration.toString()
     ]);
 
     let stderrBuffer = '';
@@ -66,6 +74,7 @@ export const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void
     });
 
     soxProcess.on('error', (error) => {
+      logger.error({ err: error }, 'Recording error');
       console.error(chalk.red('\n❌ Recording error:'), error.message);
       stop();
     });

@@ -1,5 +1,7 @@
 # Whisper Bun
 
+[![CI](https://github.com/caioborghi/whisper_bun/workflows/CI/badge.svg)](https://github.com/caioborghi/whisper_bun/actions/workflows/ci.yml)
+
 Transcribe speech to text in real-time. Speak, see text appear instantly, copy it automatically.
 
 ## Features
@@ -166,14 +168,29 @@ Verification: Check `transcribe.py` lines 46-56 for platform detection logic.
 
 ## Configuration
 
-Edit `src/constants.ts`:
+Use command-line arguments:
 
-- `CHUNK_DURATION`: Recording length in seconds (default: 3)
-- `MODEL_NAME`: Whisper model size (default: 'base.en')
+```bash
+# Use different model
+bun run start --model small.en
 
-Available models: `tiny.en`, `base.en`, `small.en`, `medium.en`, `large`
+# Change chunk duration
+bun run start --chunk 5
 
-Smaller models process faster. Larger models transcribe more accurately.
+# Custom output file
+bun run start --output transcript.txt
+
+# Multiple options
+bun run start --model large-v3 --chunk 4 --output notes.txt
+```
+
+Available options:
+- `-m, --model` - Model name (tiny.en, base.en, small.en, medium.en, large)
+- `-c, --chunk` - Chunk duration in seconds
+- `-r, --rate` - Sample rate in Hz
+- `-o, --output` - Output file path
+- `-t, --temp` - Temp directory
+- `-l, --log-level` - Log level (error, warn, info, debug)
 
 ## Requirements
 

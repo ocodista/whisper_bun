@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import type { ChunkInfo, TranscriptionResult } from '../types';
-import { MODEL_NAME } from '../constants';
+import type { Logger } from '../logger';
 
 let deviceInfo = 'Detecting...';
 let deviceInfoReceived = false;
@@ -11,13 +11,19 @@ export const getDeviceInfo = (): string => {
   return deviceInfo;
 };
 
-export const transcribeChunk = async (chunk: ChunkInfo): Promise<TranscriptionResult> => {
+export const transcribeChunk = async (
+  chunk: ChunkInfo,
+  modelName: string,
+  logger: Logger
+): Promise<TranscriptionResult> => {
   return new Promise((resolve, reject) => {
     const pythonScript = join(process.cwd(), 'transcribe.py');
     const venvPython = join(process.cwd(), 'venv', 'bin', 'python3');
     const pythonCmd = existsSync(venvPython) ? venvPython : 'python3';
 
-    const transcribe = spawn(pythonCmd, [pythonScript, chunk.path, MODEL_NAME]);
+    logger.debug(`Executing transcription: ${pythonCmd} ${pythonScript} ${chunk.path} ${modelName}`);
+
+    const transcribe = spawn(pythonCmd, [pythonScript, chunk.path, modelName]);
 
     let stdoutData = '';
     let stderrData = '';
