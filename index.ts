@@ -157,6 +157,10 @@ const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const getElapsedSeconds = (): number => {
+    return Math.floor((Date.now() - sessionStartTime) / 1000);
+  };
+
   const getChunkCount = (): number => {
     return currentChunkNumber;
   };
@@ -222,7 +226,7 @@ const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void) => {
     }
   };
 
-  return { start, stop, getElapsedTime, getChunkCount };
+  return { start, stop, getElapsedTime, getElapsedSeconds, getChunkCount };
 };
 
 const transcribeChunk = async (chunk: ChunkInfo): Promise<TranscriptionResult> => {
@@ -366,8 +370,10 @@ const main = async (): Promise<void> => {
     clearInterval(updateInterval);
     recorder.stop();
 
+    const elapsedSeconds = recorder.getElapsedSeconds();
     const finalStats = {
       time: recorder.getElapsedTime(),
+      elapsedSeconds,
       device: deviceInfo,
       chunks: recorder.getChunkCount(),
       queue: transcriber.getQueueSize()
@@ -377,6 +383,8 @@ const main = async (): Promise<void> => {
       tui.destroy();
 
       const fullTranscription = tui.getAllTranscriptions();
+      const wordCount = fullTranscription ? fullTranscription.split(/\s+/).filter(word => word.length > 0).length : 0;
+      const wordsPerSecond = elapsedSeconds > 0 ? (wordCount / elapsedSeconds).toFixed(2) : '0.00';
 
       console.log(chalk.yellow('\n🛑 Recording stopped'));
       console.log(chalk.gray('─'.repeat(40)));
@@ -387,8 +395,12 @@ const main = async (): Promise<void> => {
         console.log(chalk.gray('─'.repeat(40)));
       }
 
-      console.log(chalk.cyan('Statistics:'));
-      console.log(chalk.gray(`  Time: ${finalStats.time}`));
+      console.log(chalk.cyan('Summary:'));
+      console.log(chalk.gray(`  Recorded time: ${finalStats.time}`));
+      console.log(chalk.gray(`  Words: ${wordCount}`));
+      console.log(chalk.gray(`  Words/s: ${wordsPerSecond}`));
+      console.log();
+      console.log(chalk.cyan('Details:'));
       console.log(chalk.gray(`  Device: ${finalStats.device}`));
       console.log(chalk.gray(`  Chunks processed: ${finalStats.chunks}`));
       console.log(chalk.gray(`  Queue remaining: ${finalStats.queue}`));
