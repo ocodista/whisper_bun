@@ -1,0 +1,21 @@
+{
+  "name": "whisper_bun",
+  "description": "Streaming microphone transcription using Bun and Faster Whisper",
+  "version": "1.0.0",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "ora": "^9.0.0"
+  }
+}
