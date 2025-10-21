@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { INSTALL_DIR } from '../constants';
 import type { ChunkInfo, TranscriptionResult } from '../types';
 import type { Logger } from '../logger';
 
@@ -17,8 +18,8 @@ export const transcribeChunk = async (
   logger: Logger
 ): Promise<TranscriptionResult> => {
   return new Promise((resolve, reject) => {
-    const pythonScript = join(process.cwd(), 'transcribe.py');
-    const venvPython = join(process.cwd(), 'venv', 'bin', 'python3');
+    const pythonScript = join(INSTALL_DIR, 'transcribe.py');
+    const venvPython = join(INSTALL_DIR, 'venv', 'bin', 'python3');
     const pythonCmd = existsSync(venvPython) ? venvPython : 'python3';
 
     logger.debug(`Executing transcription: ${pythonCmd} ${pythonScript} ${chunk.path} ${modelName}`);

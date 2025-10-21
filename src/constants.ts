@@ -3,15 +3,21 @@
  * Use CLI arguments instead (see src/cli.ts).
  *
  * To pass custom configuration, use command-line flags:
- * - bun run start --model base.en
- * - bun run start --chunk 5
- * - bun run start --rate 16000
+ * - listen --model base.en
+ * - listen --chunk 5
+ * - listen --rate 16000
  *
- * See: bun run start --help
+ * See: listen --help
  */
 
 import { join } from 'path';
+import { homedir } from 'os';
 import { createLogger } from './logger';
+
+/**
+ * Installation directory for Python scripts, venv, and models
+ */
+export const INSTALL_DIR = join(homedir(), '.listen');
 
 /**
  * @deprecated Use --rate CLI flag instead

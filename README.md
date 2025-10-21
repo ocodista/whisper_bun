@@ -4,47 +4,58 @@
 
 Transcribe speech to text in real-time. Speak, see text appear instantly, copy it automatically.
 
+## Prerequisites
+
+- **Bun runtime** ([install](https://bun.sh))
+- **SoX** audio tool
+  - macOS: `brew install sox`
+  - Linux: `sudo apt-get install sox libsox-fmt-all`
+  - Windows: [Download](https://sourceforge.net/projects/sox/)
+- **Python 3.8+** (usually pre-installed)
+
 ## Installation
 
-### Global Installation (Recommended)
+### Quick Install (Compiled Binary)
 
-Install globally to use `listen` from anywhere, just like `npm install -g`:
+The easiest way to install Listen is using the compiled binary:
 
 ```bash
-# Clone and setup
 git clone https://github.com/ocodista/whisper_bun.git
 cd whisper_bun
 bun install
-./setup-whisper.sh
-
-# Install globally
-bun link
+./install.sh
 ```
 
-Now run `listen` from any directory.
+This will:
+- Set up Python dependencies in `~/.listen/`
+- Download the Whisper model
+- Compile a standalone binary
+- Install `listen` to `/usr/local/bin`
 
-**Note for asdf users:** If you manage Bun with asdf, ensure your directories have a `.tool-versions` file with `bun 1.3.0` to avoid version errors when running `listen` globally.
-
-### Alternative: Direct Install from GitHub
-
-Once you've set up the project locally, you can also install it globally using:
-
-```bash
-bun add -g .
-```
-
-Or directly from GitHub (after pushing this branch):
-
-```bash
-bun add -g github:ocodista/whisper_bun#feature/listen-cli
-```
+Now run `listen` from anywhere, no Bun runtime required!
 
 ### Uninstall
 
 ```bash
-bun unlink listen
-# or
-bun remove -g listen
+./uninstall.sh
+```
+
+Or manually:
+```bash
+sudo rm /usr/local/bin/listen
+rm -rf ~/.listen
+```
+
+### Alternative: Development Mode
+
+For local development without global installation:
+
+```bash
+git clone https://github.com/ocodista/whisper_bun.git
+cd whisper_bun
+bun install
+./setup-whisper.sh
+bun run start
 ```
 
 ## Features
@@ -52,139 +63,6 @@ bun remove -g listen
 Real-time transcription with live performance metrics. Text saves to `result.txt` and copies to your clipboard. Works on macOS, Linux, and Windows.
 
 Optimized for Apple Silicon, CUDA GPUs, and standard CPUs.
-
-## Quick Start (Development)
-
-For local development without global installation:
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-### Prerequisites
-
-1. **Install Bun** ([https://bun.sh](https://bun.sh))
-   ```bash
-   curl -fsSL https://bun.sh/install | bash
-   ```
-
-2. **Install SoX** ([http://sox.sourceforge.net](http://sox.sourceforge.net))
-   ```bash
-   brew install sox
-   ```
-
-3. **Install Python 3.8+** (usually pre-installed on macOS)
-   ```bash
-   python3 --version
-   ```
-   If not installed: `brew install python3`
-
-### Setup and Run
-
-```bash
-bun install
-./setup-whisper.sh
-bun run start
-```
-
-Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
-
-</details>
-
-<details>
-<summary><strong>Linux</strong></summary>
-
-### Prerequisites
-
-1. **Install Bun** ([https://bun.sh](https://bun.sh))
-   ```bash
-   curl -fsSL https://bun.sh/install | bash
-   ```
-
-2. **Install SoX**
-
-   **Ubuntu/Debian:**
-   ```bash
-   sudo apt-get update
-   sudo apt-get install sox libsox-fmt-all
-   ```
-
-   **Fedora/RHEL:**
-   ```bash
-   sudo dnf install sox
-   ```
-
-   **Arch:**
-   ```bash
-   sudo pacman -S sox
-   ```
-
-3. **Install Python 3.8+**
-
-   **Ubuntu/Debian:**
-   ```bash
-   sudo apt-get install python3 python3-pip python3-venv
-   ```
-
-   **Fedora/RHEL:**
-   ```bash
-   sudo dnf install python3 python3-pip
-   ```
-
-   **Arch:**
-   ```bash
-   sudo pacman -S python python-pip
-   ```
-
-### Setup and Run
-
-```bash
-bun install
-./setup-whisper.sh
-bun run start
-```
-
-Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
-
-</details>
-
-<details>
-<summary><strong>Windows</strong></summary>
-
-### Prerequisites
-
-1. **Install Bun** ([https://bun.sh](https://bun.sh))
-   ```powershell
-   powershell -c "irm bun.sh/install.ps1 | iex"
-   ```
-
-2. **Install SoX** ([http://sox.sourceforge.net](http://sox.sourceforge.net))
-   - Download from [SourceForge](https://sourceforge.net/projects/sox/files/sox/)
-   - Or use Chocolatey:
-     ```powershell
-     choco install sox.portable
-     ```
-   - Or use Scoop:
-     ```powershell
-     scoop install sox
-     ```
-
-3. **Install Python 3.8+** ([https://www.python.org/downloads](https://www.python.org/downloads))
-   - Download and install from official website
-   - Make sure to check "Add Python to PATH" during installation
-
-### Setup and Run
-
-```bash
-bun install
-bash setup-whisper.sh
-bun run start
-```
-
-Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
-
-**Note:** On Windows, you may need to run commands in Git Bash or WSL for the setup script to work properly.
-
-</details>
 
 ## How It Works
 
