@@ -1,8 +1,49 @@
-# Whisper Bun
+# Listen
 
 [![CI](https://github.com/ocodista/whisper_bun/actions/workflows/ci.yml/badge.svg)](https://github.com/ocodista/whisper_bun/actions/workflows/ci.yml)
 
 Transcribe speech to text in real-time. Speak, see text appear instantly, copy it automatically.
+
+## Installation
+
+### Global Installation (Recommended)
+
+Install globally to use `listen` from anywhere, just like `npm install -g`:
+
+```bash
+# Clone and setup
+git clone https://github.com/ocodista/whisper_bun.git
+cd whisper_bun
+bun install
+./setup-whisper.sh
+
+# Install globally
+bun link
+```
+
+Now run `listen` from any directory.
+
+### Alternative: Direct Install from GitHub
+
+Once you've set up the project locally, you can also install it globally using:
+
+```bash
+bun add -g .
+```
+
+Or directly from GitHub (after pushing this branch):
+
+```bash
+bun add -g github:ocodista/whisper_bun#feature/listen-cli
+```
+
+### Uninstall
+
+```bash
+bun unlink listen
+# or
+bun remove -g listen
+```
 
 ## Features
 
@@ -10,7 +51,9 @@ Real-time transcription with live performance metrics. Text saves to `result.txt
 
 Optimized for Apple Silicon, CUDA GPUs, and standard CPUs.
 
-## Quick Start
+## Quick Start (Development)
+
+For local development without global installation:
 
 <details>
 <summary><strong>macOS</strong></summary>
@@ -172,16 +215,16 @@ Use command-line arguments:
 
 ```bash
 # Use different model
-bun run start --model small.en
+listen --model small.en
 
 # Change chunk duration
-bun run start --chunk 5
+listen --chunk 5
 
 # Custom output file
-bun run start --output transcript.txt
+listen --output transcript.txt
 
 # Multiple options
-bun run start --model large-v3 --chunk 4 --output notes.txt
+listen --model large-v3 --chunk 4 --output notes.txt
 ```
 
 Available options:
