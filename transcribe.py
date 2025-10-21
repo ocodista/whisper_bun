@@ -2,10 +2,12 @@
 """
 Faster Whisper transcription script
 Uses faster-whisper for improved performance
+Supports CUDA (NVIDIA) and optimized CPU for macOS
 """
 
 import sys
 import json
+import platform
 from pathlib import Path
 
 try:
@@ -30,16 +32,32 @@ def transcribe_audio(audio_path: str, model_size: str = "base.en") -> dict:
         Dictionary with transcription results
     """
     try:
-        # Try GPU first (CUDA), fallback to CPU
+        # Detect platform and optimize accordingly
+        is_macos = platform.system() == "Darwin"
         device_used = "cpu"
+
+        # Try CUDA first (for NVIDIA GPUs)
         try:
             model = WhisperModel(model_size, device="cuda", compute_type="float16")
             device_used = "cuda"
             print(f"[GPU] Running on CUDA with float16", file=sys.stderr)
         except Exception:
-            # Use CPU if CUDA not available
-            model = WhisperModel(model_size, device="cpu", compute_type="int8")
-            print(f"[CPU] Running on CPU with int8", file=sys.stderr)
+            # On macOS, use optimized CPU settings for Apple Silicon
+            if is_macos:
+                # Use float32 for better accuracy on Apple Silicon
+                # The Accelerate framework will handle optimization
+                model = WhisperModel(
+                    model_size,
+                    device="cpu",
+                    compute_type="float32",
+                    cpu_threads=0,  # Use all available cores
+                    num_workers=1
+                )
+                print(f"[CPU] Running on macOS (Apple Silicon optimized) with float32", file=sys.stderr)
+            else:
+                # Standard CPU fallback for other platforms
+                model = WhisperModel(model_size, device="cpu", compute_type="int8")
+                print(f"[CPU] Running on CPU with int8", file=sys.stderr)
 
         # Transcribe
         segments, info = model.transcribe(

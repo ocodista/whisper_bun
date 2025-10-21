@@ -116,7 +116,7 @@ const createTUI = () => {
     chunks: number;
     queue: number;
   }) => {
-    const statusColor = stats.status === 'Recording' ? 'green' : 'yellow';
+    const statusColor = stats.status.includes('Recording') ? 'green' : 'yellow';
     const deviceColor = stats.device.includes('GPU') ? 'green' : 'cyan';
 
     statsBox.setContent(
@@ -124,8 +124,7 @@ const createTUI = () => {
       `{yellow-fg}Time:{/} ${stats.time}  ` +
       `{${deviceColor}-fg}Device:{/} ${stats.device}  ` +
       `{blue-fg}Chunks:{/} ${stats.chunks}  ` +
-      `{magenta-fg}Queue:{/} ${stats.queue}\n` +
-      `{gray-fg}Press Ctrl+C to stop{/}`
+      `{magenta-fg}Queue:{/} ${stats.queue}`
     );
     screen.render();
   };
@@ -141,7 +140,11 @@ const createTUI = () => {
     screen.render();
   };
 
-  return { updateStats, addTranscription, render };
+  const destroy = () => {
+    screen.destroy();
+  };
+
+  return { updateStats, addTranscription, render, destroy, screen };
 };
 
 const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void) => {
@@ -247,8 +250,10 @@ const transcribeChunk = async (chunk: ChunkInfo): Promise<TranscriptionResult> =
       stderrData += message;
 
       if (!deviceInfoReceived && (message.includes('[GPU]') || message.includes('[CPU]'))) {
-        if (message.includes('[GPU]')) {
+        if (message.includes('CUDA')) {
           deviceInfo = 'GPU (CUDA)';
+        } else if (message.includes('Apple Silicon optimized')) {
+          deviceInfo = 'macOS (Optimized)';
         } else if (message.includes('[CPU]')) {
           deviceInfo = 'CPU (int8)';
         }
@@ -354,7 +359,7 @@ const main = async (): Promise<void> => {
 
   const updateInterval = setInterval(() => {
     tui.updateStats({
-      status: '🎙️  Recording',
+      status: 'Recording',
       time: recorder.getElapsedTime(),
       device: deviceInfo,
       chunks: recorder.getChunkCount(),
@@ -365,7 +370,25 @@ const main = async (): Promise<void> => {
   process.on('SIGINT', () => {
     clearInterval(updateInterval);
     recorder.stop();
+
+    const finalStats = {
+      time: recorder.getElapsedTime(),
+      device: deviceInfo,
+      chunks: recorder.getChunkCount(),
+      queue: transcriber.getQueueSize()
+    };
+
     setTimeout(() => {
+      tui.destroy();
+      console.log(chalk.yellow('\n🛑 Recording stopped'));
+      console.log(chalk.gray('─'.repeat(40)));
+      console.log(chalk.cyan('Final Statistics:'));
+      console.log(chalk.gray(`  Time: ${finalStats.time}`));
+      console.log(chalk.gray(`  Device: ${finalStats.device}`));
+      console.log(chalk.gray(`  Chunks processed: ${finalStats.chunks}`));
+      console.log(chalk.gray(`  Queue remaining: ${finalStats.queue}`));
+      console.log(chalk.gray('─'.repeat(40)));
+      console.log(chalk.green('✅ Goodbye!\n'));
       process.exit(0);
     }, 500);
   });
