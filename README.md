@@ -166,7 +166,7 @@ Verification: Check `transcribe.py` lines 46-56 for platform detection logic.
 
 ## Configuration
 
-Edit `src/config/constants.ts`:
+Edit `src/constants.ts`:
 
 - `CHUNK_DURATION`: Recording length in seconds (default: 3)
 - `MODEL_NAME`: Whisper model size (default: 'base.en')
