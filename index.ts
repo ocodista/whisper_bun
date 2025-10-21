@@ -152,9 +152,6 @@ class StreamingTranscriber {
     }
 
     try {
-      // Show pause indicator
-      console.log('\n[🤚]\n');
-
       const result = await this.transcribeChunk(chunk);
 
       if (result.text && result.text.trim()) {

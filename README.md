@@ -22,9 +22,9 @@ bun run start
 
 ## How It Works
 
-The program records audio, transcribes it, and displays the text. Each chunk takes 3 seconds to record. While transcribing, you'll see `[[ PAUSE 🤚 ]]`.
+The program records audio, transcribes it, and displays the text. Each chunk takes 3 seconds to record. Transcription happens in the background while the next chunk records.
 
-Output appears as plain text with line breaks between chunks—easy to select and copy.
+Output appears as continuous plain text—easy to select and copy.
 
 ## Configuration
 
