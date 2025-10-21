@@ -1,5 +1,7 @@
 # Whisper Bun
 
+[![CI](https://github.com/caioborghi/whisper_bun/workflows/CI/badge.svg)](https://github.com/caioborghi/whisper_bun/actions/workflows/ci.yml)
+
 Transcribe speech to text in real-time. Speak, see text appear instantly, copy it automatically.
 
 ## Features
@@ -10,14 +12,134 @@ Optimized for Apple Silicon, CUDA GPUs, and standard CPUs.
 
 ## Quick Start
 
+<details>
+<summary><strong>macOS</strong></summary>
+
+### Prerequisites
+
+1. **Install Bun** ([https://bun.sh](https://bun.sh))
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+2. **Install SoX** ([http://sox.sourceforge.net](http://sox.sourceforge.net))
+   ```bash
+   brew install sox
+   ```
+
+3. **Install Python 3.8+** (usually pre-installed on macOS)
+   ```bash
+   python3 --version
+   ```
+   If not installed: `brew install python3`
+
+### Setup and Run
+
 ```bash
-brew install sox
 bun install
 ./setup-whisper.sh
 bun run start
 ```
 
 Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
+
+</details>
+
+<details>
+<summary><strong>Linux</strong></summary>
+
+### Prerequisites
+
+1. **Install Bun** ([https://bun.sh](https://bun.sh))
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+2. **Install SoX**
+
+   **Ubuntu/Debian:**
+   ```bash
+   sudo apt-get update
+   sudo apt-get install sox libsox-fmt-all
+   ```
+
+   **Fedora/RHEL:**
+   ```bash
+   sudo dnf install sox
+   ```
+
+   **Arch:**
+   ```bash
+   sudo pacman -S sox
+   ```
+
+3. **Install Python 3.8+**
+
+   **Ubuntu/Debian:**
+   ```bash
+   sudo apt-get install python3 python3-pip python3-venv
+   ```
+
+   **Fedora/RHEL:**
+   ```bash
+   sudo dnf install python3 python3-pip
+   ```
+
+   **Arch:**
+   ```bash
+   sudo pacman -S python python-pip
+   ```
+
+### Setup and Run
+
+```bash
+bun install
+./setup-whisper.sh
+bun run start
+```
+
+Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
+
+</details>
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+### Prerequisites
+
+1. **Install Bun** ([https://bun.sh](https://bun.sh))
+   ```powershell
+   powershell -c "irm bun.sh/install.ps1 | iex"
+   ```
+
+2. **Install SoX** ([http://sox.sourceforge.net](http://sox.sourceforge.net))
+   - Download from [SourceForge](https://sourceforge.net/projects/sox/files/sox/)
+   - Or use Chocolatey:
+     ```powershell
+     choco install sox.portable
+     ```
+   - Or use Scoop:
+     ```powershell
+     scoop install sox
+     ```
+
+3. **Install Python 3.8+** ([https://www.python.org/downloads](https://www.python.org/downloads))
+   - Download and install from official website
+   - Make sure to check "Add Python to PATH" during installation
+
+### Setup and Run
+
+```bash
+bun install
+bash setup-whisper.sh
+bun run start
+```
+
+Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
+
+**Note:** On Windows, you may need to run commands in Git Bash or WSL for the setup script to work properly.
+
+</details>
 
 ## How It Works
 
@@ -46,14 +168,29 @@ Verification: Check `transcribe.py` lines 46-56 for platform detection logic.
 
 ## Configuration
 
-Edit `index.ts` constants:
+Use command-line arguments:
 
-- `CHUNK_DURATION`: Recording length in seconds (default: 3)
-- `MODEL_NAME`: Whisper model size (default: 'base.en')
+```bash
+# Use different model
+bun run start --model small.en
 
-Available models: `tiny.en`, `base.en`, `small.en`, `medium.en`, `large`
+# Change chunk duration
+bun run start --chunk 5
 
-Smaller models process faster. Larger models transcribe more accurately.
+# Custom output file
+bun run start --output transcript.txt
+
+# Multiple options
+bun run start --model large-v3 --chunk 4 --output notes.txt
+```
+
+Available options:
+- `-m, --model` - Model name (tiny.en, base.en, small.en, medium.en, large)
+- `-c, --chunk` - Chunk duration in seconds
+- `-r, --rate` - Sample rate in Hz
+- `-o, --output` - Output file path
+- `-t, --temp` - Temp directory
+- `-l, --log-level` - Log level (error, warn, info, debug)
 
 ## Requirements
 

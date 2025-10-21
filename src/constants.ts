@@ -1,0 +1,39 @@
+/**
+ * @deprecated This file is kept for backward compatibility with tests.
+ * Use CLI arguments instead (see src/cli.ts).
+ *
+ * To pass custom configuration, use command-line flags:
+ * - bun run start --model base.en
+ * - bun run start --chunk 5
+ * - bun run start --rate 16000
+ *
+ * See: bun run start --help
+ */
+
+import { join } from 'path';
+import { createLogger } from './logger';
+
+/**
+ * @deprecated Use --rate CLI flag instead
+ */
+export const SAMPLE_RATE = 16000;
+
+/**
+ * @deprecated Use --temp CLI flag instead
+ */
+export const TEMP_DIR = join(process.cwd(), 'temp');
+
+/**
+ * @deprecated Use --model CLI flag instead
+ */
+export const MODEL_NAME = 'base.en';
+
+/**
+ * @deprecated Use --chunk CLI flag instead
+ */
+export const CHUNK_DURATION = 3;
+
+/**
+ * @deprecated Use createLogger() from src/logger.ts instead
+ */
+export const logger = createLogger('error');
