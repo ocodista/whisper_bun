@@ -1,6 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
 import { join } from 'path';
-import { mkdirSync, existsSync, unlinkSync } from 'fs';
+import { mkdirSync, existsSync, unlinkSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
 import blessed from 'blessed';
 
@@ -94,10 +94,6 @@ const createTUI = () => {
   screen.append(separatorBox);
   screen.append(transcriptionBox);
 
-  screen.key(['C-c'], () => {
-    process.exit(0);
-  });
-
   const updateStats = (stats: {
     status: string;
     time: string;
@@ -109,22 +105,20 @@ const createTUI = () => {
     const deviceColor = stats.device.includes('GPU') ? 'green' : 'cyan';
 
     statsBox.setContent(
-      `{${statusColor}-fg}Status:{/} ${stats.status}  ` +
-      `{yellow-fg}Time:{/} ${stats.time}  ` +
-      `{${deviceColor}-fg}Device:{/} ${stats.device}  ` +
-      `{blue-fg}Chunks:{/} ${stats.chunks}  ` +
-      `{magenta-fg}Queue:{/} ${stats.queue}`
+      `{${statusColor}-fg}Status:{/} ${stats.status}  {yellow-fg}Time:{/} ${stats.time}  {${deviceColor}-fg}Device:{/} ${stats.device}  {blue-fg}Chunks:{/} ${stats.chunks}  {magenta-fg}Queue:{/} ${stats.queue}`
     );
     screen.render();
   };
 
   const addTranscription = (text: string) => {
-    if (text && text.trim()) {
-      const cleanText = text.trim();
-      transcriptionBuffer.push(cleanText);
-      transcriptionBox.log(cleanText);
-      screen.render();
+    if (!text || !text.trim()) {
+      return;
     }
+
+    const cleanText = text.trim();
+    transcriptionBuffer.push(cleanText);
+    transcriptionBox.log(cleanText);
+    screen.render();
   };
 
   const render = () => {
@@ -318,7 +312,7 @@ const createStreamingTranscriber = (onTranscription: (text: string) => void) => 
       try {
         unlinkSync(chunk.path);
       } catch {
-        // Ignore cleanup errors
+
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -385,6 +379,15 @@ const main = async (): Promise<void> => {
       const fullTranscription = tui.getAllTranscriptions();
       const wordCount = fullTranscription ? fullTranscription.split(/\s+/).filter(word => word.length > 0).length : 0;
       const wordsPerSecond = elapsedSeconds > 0 ? (wordCount / elapsedSeconds).toFixed(2) : '0.00';
+
+      if (fullTranscription) {
+        const resultPath = join(process.cwd(), 'result.txt');
+        writeFileSync(resultPath, fullTranscription, 'utf-8');
+
+        const pbcopy = spawn('pbcopy');
+        pbcopy.stdin.write(fullTranscription);
+        pbcopy.stdin.end();
+      }
 
       console.log(chalk.yellow('\n🛑 Recording stopped'));
       console.log(chalk.gray('─'.repeat(40)));
