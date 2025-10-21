@@ -30,8 +30,12 @@ def transcribe_audio(audio_path: str, model_size: str = "base.en") -> dict:
         Dictionary with transcription results
     """
     try:
-        # Initialize model (uses CPU by default, can use CUDA if available)
-        model = WhisperModel(model_size, device="cpu", compute_type="int8")
+        # Try GPU first (CUDA), fallback to CPU
+        try:
+            model = WhisperModel(model_size, device="cuda", compute_type="float16")
+        except Exception:
+            # Use CPU if CUDA not available
+            model = WhisperModel(model_size, device="cpu", compute_type="int8")
 
         # Transcribe
         segments, info = model.transcribe(

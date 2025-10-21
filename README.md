@@ -48,6 +48,8 @@ Smaller models are faster. Larger models are more accurate.
 
 Faster Whisper runs 4-5x faster than the original Whisper. It uses CTranslate2 for optimized inference and consumes less memory.
 
+The program automatically uses GPU acceleration (CUDA) if available, falling back to CPU if not.
+
 ## License
 
 MIT
