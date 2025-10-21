@@ -27,7 +27,7 @@ Live stats show recording time, device type, and transcription speed in tokens p
 
 ## Performance
 
-Faster Whisper runs 4-5x faster than original Whisper. Uses CTranslate2 for optimized inference with lower memory usage.
+Powered by [Faster Whisper](https://github.com/SYSTRAN/faster-whisper) - runs 4-5x faster than original Whisper. Uses CTranslate2 for optimized inference with lower memory usage.
 
 Detects your hardware automatically:
 
