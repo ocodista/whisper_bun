@@ -23,6 +23,8 @@ bun link
 
 Now run `listen` from any directory.
 
+**Note for asdf users:** If you manage Bun with asdf, ensure your directories have a `.tool-versions` file with `bun 1.3.0` to avoid version errors when running `listen` globally.
+
 ### Alternative: Direct Install from GitHub
 
 Once you've set up the project locally, you can also install it globally using:
