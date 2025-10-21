@@ -45,23 +45,13 @@ const createTUI = () => {
     title: 'Whisper Transcription'
   });
 
-  const headerBox = blessed.box({
+  const transcriptionBuffer: string[] = [];
+
+  const statsBox = blessed.box({
     top: 0,
     left: 0,
     width: '100%',
-    height: 3,
-    content: chalk.cyan.bold('╔═══════════════════════════════════════╗\n║   Streaming Whisper Transcription    ║\n╚═══════════════════════════════════════╝'),
-    tags: true,
-    style: {
-      fg: 'cyan'
-    }
-  });
-
-  const statsBox = blessed.box({
-    top: 3,
-    left: 0,
-    width: '100%',
-    height: 3,
+    height: 2,
     content: '',
     tags: true,
     style: {
@@ -70,7 +60,7 @@ const createTUI = () => {
   });
 
   const separatorBox = blessed.box({
-    top: 6,
+    top: 2,
     left: 0,
     width: '100%',
     height: 1,
@@ -79,10 +69,10 @@ const createTUI = () => {
   });
 
   const transcriptionBox = blessed.log({
-    top: 7,
+    top: 3,
     left: 0,
     width: '100%',
-    height: '100%-7',
+    height: '100%-3',
     scrollable: true,
     alwaysScroll: true,
     scrollbar: {
@@ -100,7 +90,6 @@ const createTUI = () => {
     }
   });
 
-  screen.append(headerBox);
   screen.append(statsBox);
   screen.append(separatorBox);
   screen.append(transcriptionBox);
@@ -131,7 +120,9 @@ const createTUI = () => {
 
   const addTranscription = (text: string) => {
     if (text && text.trim()) {
-      transcriptionBox.log(text.trim());
+      const cleanText = text.trim();
+      transcriptionBuffer.push(cleanText);
+      transcriptionBox.log(cleanText);
       screen.render();
     }
   };
@@ -144,7 +135,11 @@ const createTUI = () => {
     screen.destroy();
   };
 
-  return { updateStats, addTranscription, render, destroy, screen };
+  const getAllTranscriptions = (): string => {
+    return transcriptionBuffer.join(' ');
+  };
+
+  return { updateStats, addTranscription, render, destroy, screen, getAllTranscriptions };
 };
 
 const createStreamingRecorder = (onChunkReady: (chunk: ChunkInfo) => void) => {
@@ -380,9 +375,19 @@ const main = async (): Promise<void> => {
 
     setTimeout(() => {
       tui.destroy();
+
+      const fullTranscription = tui.getAllTranscriptions();
+
       console.log(chalk.yellow('\n🛑 Recording stopped'));
       console.log(chalk.gray('─'.repeat(40)));
-      console.log(chalk.cyan('Final Statistics:'));
+
+      if (fullTranscription) {
+        console.log(chalk.cyan('Transcription:'));
+        console.log(fullTranscription);
+        console.log(chalk.gray('─'.repeat(40)));
+      }
+
+      console.log(chalk.cyan('Statistics:'));
       console.log(chalk.gray(`  Time: ${finalStats.time}`));
       console.log(chalk.gray(`  Device: ${finalStats.device}`));
       console.log(chalk.gray(`  Chunks processed: ${finalStats.chunks}`));
