@@ -37,3 +37,5 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 temp/
 models/
 venv/
+result.txt
+test-fixtures/

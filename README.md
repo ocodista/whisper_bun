@@ -1,83 +1,66 @@
 # Whisper Bun
 
-Stream your microphone to text in real-time.
+Transcribe speech to text in real-time. Speak, see text appear instantly, copy it automatically.
 
-## What It Does
+## Features
 
-Records your voice in 3-second chunks and transcribes it continuously using Faster Whisper. Press CTRL+C to stop.
+Real-time transcription with live performance metrics. Text saves to `result.txt` and copies to your clipboard. Works on macOS, Linux, and Windows.
 
-## Setup
+Optimized for Apple Silicon, CUDA GPUs, and standard CPUs.
 
-**Install dependencies:**
+## Quick Start
+
 ```bash
 brew install sox
 bun install
 ./setup-whisper.sh
-```
-
-**Run:**
-```bash
 bun run start
 ```
 
+Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
+
 ## How It Works
 
-The program records audio, transcribes it, and displays the text. Each chunk takes 3 seconds to record. Transcription happens in the background while the next chunk records.
+Records audio in 3-second chunks. Transcribes with Faster Whisper while recording the next chunk. Displays text and metrics in a terminal interface.
 
-Output appears as continuous plain text—easy to select and copy.
+Live stats show recording time, device type, and transcription speed in tokens per second.
+
+## Performance
+
+Faster Whisper runs 4-5x faster than original Whisper. Uses CTranslate2 for optimized inference with lower memory usage.
+
+Detects your hardware automatically:
+
+**NVIDIA GPU**
+Uses CUDA with float16 precision.
+
+**Apple Silicon (M1/M2/M3)**
+Leverages Accelerate framework with float32. Exploits Apple Neural Engine and AMX coprocessor. Float32 outperforms int8 quantization on Apple Silicon while maintaining accuracy. Trade-off: higher memory usage for better performance and quality.
+
+Multi-core optimization uses `cpu_threads=0` to utilize all performance cores. Apple's GCD distributes workload efficiently for real-time streaming.
+
+**Standard CPU**
+Uses int8 quantization for efficient processing.
+
+Verification: Check `transcribe.py` lines 46-56 for platform detection logic.
 
 ## Configuration
 
-Edit `index.ts` to change settings:
+Edit `index.ts` constants:
 
 - `CHUNK_DURATION`: Recording length in seconds (default: 3)
 - `MODEL_NAME`: Whisper model size (default: 'base.en')
 
 Available models: `tiny.en`, `base.en`, `small.en`, `medium.en`, `large`
 
-Smaller models are faster. Larger models are more accurate.
+Smaller models process faster. Larger models transcribe more accurately.
 
 ## Requirements
 
-- [Bun](https://bun.sh)
-- [SoX](http://sox.sourceforge.net)
+- Bun runtime
+- SoX audio tool
 - Python 3.8+
 - macOS or Linux
-
-## How Faster Whisper Helps
-
-Faster Whisper runs 4-5x faster than the original Whisper. It uses CTranslate2 for optimized inference and consumes less memory.
-
-The program automatically detects your hardware:
-- **NVIDIA GPU**: Uses CUDA with float16
-- **macOS (Apple Silicon)**: Uses optimized CPU with float32 and Accelerate framework
-- **Other**: Standard CPU with int8
-
-### macOS Optimizations Explained
-
-On Apple Silicon (M1/M2/M3), the application is specifically optimized for maximum performance:
-
-**Why float32 instead of int8?**
-- Apple's Accelerate framework provides hardware-accelerated BLAS operations
-- Float32 leverages the Apple Neural Engine and AMX (Apple Matrix coprocessor)
-- Significantly faster than quantized int8 on Apple Silicon while maintaining accuracy
-- Trade-off: Higher memory usage for better performance and quality
-
-**Multi-core optimization:**
-- Uses `cpu_threads=0` to automatically utilize all available performance cores
-- Apple's GCD (Grand Central Dispatch) efficiently distributes workload
-- Optimal for real-time streaming transcription
-
-**Proof:**
-Check `transcribe.py` lines 46-56 to see the platform detection and optimization logic. The stderr output will show `[CPU] Running on macOS (Apple Silicon optimized) with float32` when running on Apple Silicon.
-
-## Features
-
-- **Real-time TUI**: Live statistics showing recording time, device type, and transcription speed
-- **Auto-save**: Transcription automatically saved to `result.txt` on exit
-- **Clipboard integration**: Text copied to clipboard automatically (macOS)
-- **Performance metrics**: Live tokens/second display
-- **Voice activity detection**: Filters silence for cleaner transcripts
 
 ## License
 

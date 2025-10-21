@@ -4,6 +4,7 @@ import { mkdirSync, existsSync, unlinkSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
 import blessed from 'blessed';
 import pino from 'pino';
+import clipboardy from 'clipboardy';
 
 const SAMPLE_RATE = 16000;
 const TEMP_DIR = join(process.cwd(), 'temp');
@@ -376,9 +377,7 @@ const handleExit = (
       const resultPath = join(process.cwd(), 'result.txt');
       writeFileSync(resultPath, fullTranscription, 'utf-8');
 
-      const pbcopy = spawn('pbcopy');
-      pbcopy.stdin.write(fullTranscription);
-      pbcopy.stdin.end();
+      clipboardy.writeSync(fullTranscription);
     }
 
     console.log(chalk.yellow('\n🛑 Recording stopped'));
