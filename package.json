@@ -1,12 +1,17 @@
 {
-  "name": "whisper_bun",
+  "name": "listen",
   "description": "Streaming microphone transcription using Bun and Faster Whisper",
   "version": "1.0.0",
   "module": "src/index.ts",
   "type": "module",
-  "private": true,
+  "bin": {
+    "listen": "./bin/cli.ts"
+  },
   "scripts": {
     "start": "bun run src/index.ts",
+    "build": "./build.sh",
+    "install-global": "./install.sh",
+    "uninstall-global": "./uninstall.sh",
     "test": "bun test",
     "typecheck": "bunx tsc --noEmit"
   },

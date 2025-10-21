@@ -35,10 +35,10 @@ const VALID_LOG_LEVELS = ["error", "warn", "info", "debug"] as const;
 const VERSION = "1.0.0";
 
 const HELP_TEXT = `
-${chalk.bold.cyan("Whisper Bun")} - Real-time speech transcription
+${chalk.bold.cyan("Listen")} - Real-time speech transcription
 
 ${chalk.bold("USAGE:")}
-  bun run start [options]
+  listen [options]
 
 ${chalk.bold("OPTIONS:")}
   -m, --model <name>        Model name (default: base.en)
@@ -53,10 +53,10 @@ ${chalk.bold("OPTIONS:")}
   -v, --version             Show version
 
 ${chalk.bold("EXAMPLES:")}
-  bun run start
-  bun run start --model small.en
-  bun run start --chunk 5 --output transcript.txt
-  bun run start --model large-v3 --log-level debug
+  listen
+  listen --model small.en
+  listen --chunk 5 --output transcript.txt
+  listen --model large-v3 --log-level debug
 `;
 
 const parseChunkDuration = (value: string | undefined): number => {
@@ -132,7 +132,7 @@ export const parseCliArgs = (): CliConfig => {
     }
 
     if (values.version) {
-      console.log(`Whisper Bun v${VERSION}`);
+      console.log(`Listen v${VERSION}`);
       console.log(`Bun ${Bun.version}`);
       process.exit(0);
     }

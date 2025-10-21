@@ -8,6 +8,7 @@ Supports CUDA (NVIDIA) and optimized CPU for macOS
 import sys
 import json
 import platform
+import os
 from pathlib import Path
 
 try:
@@ -18,6 +19,9 @@ except ImportError:
         "message": "Please install: pip install faster-whisper"
     }), file=sys.stderr)
     sys.exit(1)
+
+# Model storage directory
+MODELS_DIR = os.path.join(os.path.expanduser("~"), ".listen", "models")
 
 
 def transcribe_audio(audio_path: str, model_size: str = "base.en") -> dict:
@@ -38,7 +42,7 @@ def transcribe_audio(audio_path: str, model_size: str = "base.en") -> dict:
 
         # Try CUDA first (for NVIDIA GPUs)
         try:
-            model = WhisperModel(model_size, device="cuda", compute_type="float16")
+            model = WhisperModel(model_size, device="cuda", compute_type="float16", download_root=MODELS_DIR)
             device_used = "cuda"
             print(f"[GPU] Running on CUDA with float16", file=sys.stderr)
         except Exception:
@@ -51,12 +55,13 @@ def transcribe_audio(audio_path: str, model_size: str = "base.en") -> dict:
                     device="cpu",
                     compute_type="float32",
                     cpu_threads=0,  # Use all available cores
-                    num_workers=1
+                    num_workers=1,
+                    download_root=MODELS_DIR
                 )
                 print(f"[CPU] Running on macOS (Apple Silicon optimized) with float32", file=sys.stderr)
             else:
                 # Standard CPU fallback for other platforms
-                model = WhisperModel(model_size, device="cpu", compute_type="int8")
+                model = WhisperModel(model_size, device="cpu", compute_type="int8", download_root=MODELS_DIR)
                 print(f"[CPU] Running on CPU with int8", file=sys.stderr)
 
         # Transcribe

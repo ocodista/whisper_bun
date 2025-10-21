@@ -1,203 +1,63 @@
-# Whisper Bun
+# Listen
 
 [![CI](https://github.com/ocodista/whisper_bun/actions/workflows/ci.yml/badge.svg)](https://github.com/ocodista/whisper_bun/actions/workflows/ci.yml)
 
-Transcribe speech to text in real-time. Speak, see text appear instantly, copy it automatically.
+Speak. See text appear. Copy automatically.
 
-## Features
+## Install
 
-Real-time transcription with live performance metrics. Text saves to `result.txt` and copies to your clipboard. Works on macOS, Linux, and Windows.
-
-Optimized for Apple Silicon, CUDA GPUs, and standard CPUs.
-
-## Quick Start
-
-<details>
-<summary><strong>macOS</strong></summary>
-
-### Prerequisites
-
-1. **Install Bun** ([https://bun.sh](https://bun.sh))
-   ```bash
-   curl -fsSL https://bun.sh/install | bash
-   ```
-
-2. **Install SoX** ([http://sox.sourceforge.net](http://sox.sourceforge.net))
-   ```bash
-   brew install sox
-   ```
-
-3. **Install Python 3.8+** (usually pre-installed on macOS)
-   ```bash
-   python3 --version
-   ```
-   If not installed: `brew install python3`
-
-### Setup and Run
+Prerequisites: [Bun](https://bun.sh), [SoX](http://sox.sourceforge.net), Python 3.8+
 
 ```bash
+git clone https://github.com/ocodista/whisper_bun.git
+cd whisper_bun
 bun install
-./setup-whisper.sh
-bun run start
+./install.sh
 ```
 
-Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
+Now run `listen` from anywhere.
 
-</details>
+Uninstall: `./uninstall.sh`
 
-<details>
-<summary><strong>Linux</strong></summary>
-
-### Prerequisites
-
-1. **Install Bun** ([https://bun.sh](https://bun.sh))
-   ```bash
-   curl -fsSL https://bun.sh/install | bash
-   ```
-
-2. **Install SoX**
-
-   **Ubuntu/Debian:**
-   ```bash
-   sudo apt-get update
-   sudo apt-get install sox libsox-fmt-all
-   ```
-
-   **Fedora/RHEL:**
-   ```bash
-   sudo dnf install sox
-   ```
-
-   **Arch:**
-   ```bash
-   sudo pacman -S sox
-   ```
-
-3. **Install Python 3.8+**
-
-   **Ubuntu/Debian:**
-   ```bash
-   sudo apt-get install python3 python3-pip python3-venv
-   ```
-
-   **Fedora/RHEL:**
-   ```bash
-   sudo dnf install python3 python3-pip
-   ```
-
-   **Arch:**
-   ```bash
-   sudo pacman -S python python-pip
-   ```
-
-### Setup and Run
+## Usage
 
 ```bash
-bun install
-./setup-whisper.sh
-bun run start
+listen                              # Start transcribing
+listen --model small.en             # Use different model
+listen --output notes.txt           # Save to custom file
+listen --help                       # See all options
 ```
 
-Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
-
-</details>
-
-<details>
-<summary><strong>Windows</strong></summary>
-
-### Prerequisites
-
-1. **Install Bun** ([https://bun.sh](https://bun.sh))
-   ```powershell
-   powershell -c "irm bun.sh/install.ps1 | iex"
-   ```
-
-2. **Install SoX** ([http://sox.sourceforge.net](http://sox.sourceforge.net))
-   - Download from [SourceForge](https://sourceforge.net/projects/sox/files/sox/)
-   - Or use Chocolatey:
-     ```powershell
-     choco install sox.portable
-     ```
-   - Or use Scoop:
-     ```powershell
-     scoop install sox
-     ```
-
-3. **Install Python 3.8+** ([https://www.python.org/downloads](https://www.python.org/downloads))
-   - Download and install from official website
-   - Make sure to check "Add Python to PATH" during installation
-
-### Setup and Run
-
-```bash
-bun install
-bash setup-whisper.sh
-bun run start
-```
-
-Press `Ctrl+C` to stop. Find your transcription in `result.txt` or paste from clipboard.
-
-**Note:** On Windows, you may need to run commands in Git Bash or WSL for the setup script to work properly.
-
-</details>
+Output saves to `result.txt` and copies to clipboard.
 
 ## How It Works
 
-Records audio in 3-second chunks. Transcribes with Faster Whisper while recording the next chunk. Displays text and metrics in a terminal interface.
+Records 3-second audio chunks. Transcribes with Faster Whisper while recording the next chunk. Runs 4-5x faster than original Whisper.
 
-Live stats show recording time, device type, and transcription speed in tokens per second.
+**Hardware Detection:**
+- NVIDIA GPU: CUDA with float16
+- Apple Silicon: Accelerate framework with float32
+- Standard CPU: int8 quantization
 
-## Performance
+## Options
 
-Powered by [Faster Whisper](https://github.com/SYSTRAN/faster-whisper) - runs 4-5x faster than original Whisper. Uses CTranslate2 for optimized inference with lower memory usage.
-
-Detects your hardware automatically:
-
-**NVIDIA GPU**
-Uses CUDA with float16 precision.
-
-**Apple Silicon (M1/M2/M3)**
-Leverages Accelerate framework with float32. Exploits Apple Neural Engine and AMX coprocessor. Float32 outperforms int8 quantization on Apple Silicon while maintaining accuracy. Trade-off: higher memory usage for better performance and quality.
-
-Multi-core optimization uses `cpu_threads=0` to utilize all performance cores. Apple's GCD distributes workload efficiently for real-time streaming.
-
-**Standard CPU**
-Uses int8 quantization for efficient processing.
-
-Verification: Check `transcribe.py` lines 46-56 for platform detection logic.
-
-## Configuration
-
-Use command-line arguments:
-
-```bash
-# Use different model
-bun run start --model small.en
-
-# Change chunk duration
-bun run start --chunk 5
-
-# Custom output file
-bun run start --output transcript.txt
-
-# Multiple options
-bun run start --model large-v3 --chunk 4 --output notes.txt
+```
+-m, --model <name>      Model: tiny.en, base.en, small.en, medium.en, large
+-c, --chunk <seconds>   Chunk duration (default: 3)
+-o, --output <path>     Output file (default: result.txt)
+-t, --temp <path>       Temp directory (default: ./temp)
+-l, --log-level <level> Log level: error, warn, info, debug
 ```
 
-Available options:
-- `-m, --model` - Model name (tiny.en, base.en, small.en, medium.en, large)
-- `-c, --chunk` - Chunk duration in seconds
-- `-r, --rate` - Sample rate in Hz
-- `-o, --output` - Output file path
-- `-t, --temp` - Temp directory
-- `-l, --log-level` - Log level (error, warn, info, debug)
+## Development
 
-## Requirements
+Run locally without installing:
 
-- Bun runtime
-- SoX audio tool
-- Python 3.8+
-- macOS or Linux
+```bash
+bun install
+./setup-whisper.sh
+bun run start
+```
 
 ## License
 
