@@ -1,4 +1,4 @@
-import { $ } from 'bun';
+import type { Subprocess } from 'bun';
 import { join } from 'path';
 import chalk from 'chalk';
 import type { ChunkInfo } from './types';
@@ -11,7 +11,7 @@ export const createStreamingRecorder = (
   chunkDuration: number,
   logger: Logger
 ) => {
-  let soxProcess: (ReturnType<typeof $> & { kill: () => void }) | null = null;
+  let soxProcess: Subprocess | null = null;
   let currentChunkNumber = 0;
   let isRecording = false;
   let currentChunkPath: string | null = null;
@@ -33,7 +33,7 @@ export const createStreamingRecorder = (
     return currentChunkNumber;
   };
 
-  const recordNextChunk = async (): Promise<void> => {
+  const recordNextChunk = (): void => {
     if (!isRecording) {
       return;
     }
@@ -44,12 +44,22 @@ export const createStreamingRecorder = (
 
     logger.debug(`Recording chunk ${currentChunkNumber} to ${currentChunkPath}`);
 
-    try {
-      soxProcess = $`sox -d -t wav -r ${sampleRate.toString()} -c 1 -b 16 ${currentChunkPath} trim 0 ${chunkDuration.toString()}`.nothrow().quiet() as ReturnType<typeof $> & { kill: () => void };
+    soxProcess = Bun.spawn([
+      'sox',
+      '-d',
+      '-t', 'wav',
+      '-r', sampleRate.toString(),
+      '-c', '1',
+      '-b', '16',
+      currentChunkPath,
+      'trim', '0', chunkDuration.toString()
+    ], {
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
 
-      const result = await soxProcess;
-
-      if (result && result.exitCode === 0 && currentChunkPath && isRecording) {
+    soxProcess.exited.then((exitCode) => {
+      if (exitCode === 0 && currentChunkPath && isRecording) {
         const chunkInfo: ChunkInfo = {
           path: currentChunkPath,
           chunkNumber: currentChunkNumber,
@@ -59,11 +69,11 @@ export const createStreamingRecorder = (
         onChunkReady(chunkInfo);
         setImmediate(() => recordNextChunk());
       }
-    } catch (error) {
+    }).catch((error) => {
       logger.error({ err: error }, 'Recording error');
       console.error(chalk.red('\n❌ Recording error:'), error instanceof Error ? error.message : String(error));
       stop();
-    }
+    });
   };
 
   const start = (): void => {
@@ -78,7 +88,7 @@ export const createStreamingRecorder = (
   const stop = (): void => {
     isRecording = false;
 
-    if (soxProcess) {
+    if (soxProcess && !soxProcess.killed) {
       soxProcess.kill();
     }
   };
