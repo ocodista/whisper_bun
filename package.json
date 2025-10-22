@@ -12,7 +12,7 @@
     "build": "./build.sh",
     "install-global": "./install.sh",
     "uninstall-global": "./uninstall.sh",
-    "test": "bun test",
+    "test": "bun test --concurrent",
     "typecheck": "bunx tsc --noEmit"
   },
   "devDependencies": {

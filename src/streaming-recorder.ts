@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'child_process';
+import type { Subprocess } from 'bun';
 import { join } from 'path';
 import chalk from 'chalk';
 import type { ChunkInfo } from './types';
@@ -11,7 +11,7 @@ export const createStreamingRecorder = (
   chunkDuration: number,
   logger: Logger
 ) => {
-  let soxProcess: ChildProcess | null = null;
+  let soxProcess: Subprocess | null = null;
   let currentChunkNumber = 0;
   let isRecording = false;
   let currentChunkPath: string | null = null;
@@ -44,7 +44,8 @@ export const createStreamingRecorder = (
 
     logger.debug(`Recording chunk ${currentChunkNumber} to ${currentChunkPath}`);
 
-    soxProcess = spawn('sox', [
+    soxProcess = Bun.spawn([
+      'sox',
       '-d',
       '-t', 'wav',
       '-r', sampleRate.toString(),
@@ -52,16 +53,13 @@ export const createStreamingRecorder = (
       '-b', '16',
       currentChunkPath,
       'trim', '0', chunkDuration.toString()
-    ]);
-
-    let stderrBuffer = '';
-
-    soxProcess.stderr?.on('data', (data) => {
-      stderrBuffer += data.toString();
+    ], {
+      stdout: 'pipe',
+      stderr: 'pipe',
     });
 
-    soxProcess.on('close', (code) => {
-      if (code === 0 && currentChunkPath && isRecording) {
+    soxProcess.exited.then((exitCode) => {
+      if (exitCode === 0 && currentChunkPath && isRecording) {
         const chunkInfo: ChunkInfo = {
           path: currentChunkPath,
           chunkNumber: currentChunkNumber,
@@ -71,11 +69,9 @@ export const createStreamingRecorder = (
         onChunkReady(chunkInfo);
         setImmediate(() => recordNextChunk());
       }
-    });
-
-    soxProcess.on('error', (error) => {
+    }).catch((error) => {
       logger.error({ err: error }, 'Recording error');
-      console.error(chalk.red('\n❌ Recording error:'), error.message);
+      console.error(chalk.red('\n❌ Recording error:'), error instanceof Error ? error.message : String(error));
       stop();
     });
   };
@@ -93,7 +89,7 @@ export const createStreamingRecorder = (
     isRecording = false;
 
     if (soxProcess && !soxProcess.killed) {
-      soxProcess.kill('SIGTERM');
+      soxProcess.kill();
     }
   };
 

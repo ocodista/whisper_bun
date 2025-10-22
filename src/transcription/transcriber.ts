@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { $ } from 'bun';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { INSTALL_DIR } from '../constants';
@@ -17,64 +17,52 @@ export const transcribeChunk = async (
   modelName: string,
   logger: Logger
 ): Promise<TranscriptionResult> => {
-  return new Promise((resolve, reject) => {
-    const pythonScript = join(INSTALL_DIR, 'transcribe.py');
-    const venvPython = join(INSTALL_DIR, 'venv', 'bin', 'python3');
-    const pythonCmd = existsSync(venvPython) ? venvPython : 'python3';
+  const pythonScript = join(INSTALL_DIR, 'transcribe.py');
+  const venvPython = join(INSTALL_DIR, 'venv', 'bin', 'python3');
+  const pythonCmd = existsSync(venvPython) ? venvPython : 'python3';
 
-    logger.debug(`Executing transcription: ${pythonCmd} ${pythonScript} ${chunk.path} ${modelName}`);
+  logger.debug(`Executing transcription: ${pythonCmd} ${pythonScript} ${chunk.path} ${modelName}`);
 
-    const transcribe = spawn(pythonCmd, [pythonScript, chunk.path, modelName]);
+  const proc = await $`${pythonCmd} ${pythonScript} ${chunk.path} ${modelName}`.nothrow().quiet();
 
-    let stdoutData = '';
-    let stderrData = '';
+  const stdoutData = proc.stdout.toString();
+  const stderrData = proc.stderr.toString();
+  const code = proc.exitCode;
 
-    transcribe.stdout.on('data', (data) => {
-      stdoutData += data.toString();
-    });
+  if (!deviceInfoReceived && (stderrData.includes('[GPU]') || stderrData.includes('[CPU]'))) {
+    if (stderrData.includes('CUDA')) {
+      deviceInfo = 'GPU (CUDA)';
+    } else if (stderrData.includes('Apple Silicon optimized')) {
+      deviceInfo = 'macOS (Optimized)';
+    } else if (stderrData.includes('[CPU]')) {
+      deviceInfo = 'CPU (int8)';
+    }
+    deviceInfoReceived = true;
+  }
 
-    transcribe.stderr.on('data', (data) => {
-      const message = data.toString();
-      stderrData += message;
-
-      if (!deviceInfoReceived && (message.includes('[GPU]') || message.includes('[CPU]'))) {
-        if (message.includes('CUDA')) {
-          deviceInfo = 'GPU (CUDA)';
-        } else if (message.includes('Apple Silicon optimized')) {
-          deviceInfo = 'macOS (Optimized)';
-        } else if (message.includes('[CPU]')) {
-          deviceInfo = 'CPU (int8)';
-        }
-        deviceInfoReceived = true;
+  if (code !== 0) {
+    try {
+      const errorResult = JSON.parse(stderrData) as TranscriptionResult;
+      throw new Error(errorResult.error || 'Unknown error');
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error(stderrData || `Process exited with code ${code}`);
       }
-    });
+      throw error;
+    }
+  }
 
-    transcribe.on('close', (code) => {
-      if (code !== 0) {
-        try {
-          const errorResult = JSON.parse(stderrData) as TranscriptionResult;
-          reject(new Error(errorResult.error || 'Unknown error'));
-        } catch {
-          reject(new Error(stderrData || `Process exited with code ${code}`));
-        }
-        return;
-      }
+  try {
+    const result = JSON.parse(stdoutData) as TranscriptionResult;
 
-      try {
-        const result = JSON.parse(stdoutData) as TranscriptionResult;
-
-        if (result.success) {
-          resolve(result);
-        } else {
-          reject(new Error(result.error || 'Unknown error'));
-        }
-      } catch (error) {
-        reject(new Error(`Invalid JSON response: ${stdoutData}`));
-      }
-    });
-
-    transcribe.on('error', (error) => {
-      reject(error);
-    });
-  });
+    if (result.success) {
+      return result;
+    }
+    throw new Error(result.error || 'Unknown error');
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      throw new Error(`Invalid JSON response: ${stdoutData}`);
+    }
+    throw error;
+  }
 };

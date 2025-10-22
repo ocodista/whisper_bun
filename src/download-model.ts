@@ -1,6 +1,6 @@
+import { $ } from 'bun';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { spawn } from 'child_process';
 
 const MODELS_DIR = join(process.cwd(), 'models');
 const MODEL_NAME = 'ggml-base.en.bin';
@@ -27,30 +27,13 @@ const downloadModel = async (): Promise<void> => {
   console.log(`From: ${MODEL_URL}`);
   console.log(`To: ${modelPath}\n`);
 
-  return new Promise((resolve, reject) => {
-    const download = spawn('curl', [
-      '-L',
-      '-o', modelPath,
-      '--progress-bar',
-      MODEL_URL
-    ], {
-      stdio: 'inherit'
-    });
-
-    download.on('close', (code) => {
-      if (code === 0) {
-        console.log('\n✅ Download complete!');
-        console.log('\nYou can now run: bun run index.ts');
-        resolve();
-      } else {
-        reject(new Error(`Download failed with code ${code}`));
-      }
-    });
-
-    download.on('error', (error) => {
-      reject(error);
-    });
-  });
+  try {
+    await $`curl -L -o ${modelPath} --progress-bar ${MODEL_URL}`;
+    console.log('\n✅ Download complete!');
+    console.log('\nYou can now run: bun run index.ts');
+  } catch (error) {
+    throw new Error(`Download failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
 };
 
 downloadModel().catch((error) => {

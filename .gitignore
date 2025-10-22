@@ -34,9 +34,15 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Finder (MacOS) folder config
 .DS_Store
 
+# Claude Code project commands
+.claude/
+
 # Whisper-specific
 temp/
 models/
 venv/
 result.txt
 test-fixtures/
+.transcriptions/
+audio-files/
+audio.text
