@@ -1,3 +1,4 @@
+import { $ } from 'bun';
 import { join, resolve, relative } from 'path';
 import { existsSync } from 'fs';
 import { INSTALL_DIR } from '../constants';
@@ -51,16 +52,11 @@ export const transcribeFile = async (
 
   logger.debug(`Transcribing file: ${pythonCmd} ${pythonScript} ${filePath} ${modelName}`);
 
-  const proc = Bun.spawn([pythonCmd, pythonScript, filePath, modelName], {
-    stdout: 'pipe',
-    stderr: 'pipe',
-  });
+  const proc = await $`${pythonCmd} ${pythonScript} ${filePath} ${modelName}`.nothrow().quiet();
 
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  const stdout = proc.stdout.toString();
+  const stderr = proc.stderr.toString();
+  const exitCode = proc.exitCode;
 
   if (stderr) {
     logger.debug(`Python stderr: ${stderr}`);

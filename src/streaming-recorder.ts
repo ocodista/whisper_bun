@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from 'child_process';
+import { $ } from 'bun';
 import { join } from 'path';
 import chalk from 'chalk';
 import type { ChunkInfo } from './types';
@@ -11,7 +11,7 @@ export const createStreamingRecorder = (
   chunkDuration: number,
   logger: Logger
 ) => {
-  let soxProcess: ChildProcess | null = null;
+  let soxProcess: (ReturnType<typeof $> & { kill: () => void }) | null = null;
   let currentChunkNumber = 0;
   let isRecording = false;
   let currentChunkPath: string | null = null;
@@ -33,7 +33,7 @@ export const createStreamingRecorder = (
     return currentChunkNumber;
   };
 
-  const recordNextChunk = (): void => {
+  const recordNextChunk = async (): Promise<void> => {
     if (!isRecording) {
       return;
     }
@@ -44,24 +44,12 @@ export const createStreamingRecorder = (
 
     logger.debug(`Recording chunk ${currentChunkNumber} to ${currentChunkPath}`);
 
-    soxProcess = spawn('sox', [
-      '-d',
-      '-t', 'wav',
-      '-r', sampleRate.toString(),
-      '-c', '1',
-      '-b', '16',
-      currentChunkPath,
-      'trim', '0', chunkDuration.toString()
-    ]);
+    try {
+      soxProcess = $`sox -d -t wav -r ${sampleRate.toString()} -c 1 -b 16 ${currentChunkPath} trim 0 ${chunkDuration.toString()}`.nothrow().quiet() as ReturnType<typeof $> & { kill: () => void };
 
-    let stderrBuffer = '';
+      const result = await soxProcess;
 
-    soxProcess.stderr?.on('data', (data) => {
-      stderrBuffer += data.toString();
-    });
-
-    soxProcess.on('close', (code) => {
-      if (code === 0 && currentChunkPath && isRecording) {
+      if (result && result.exitCode === 0 && currentChunkPath && isRecording) {
         const chunkInfo: ChunkInfo = {
           path: currentChunkPath,
           chunkNumber: currentChunkNumber,
@@ -71,13 +59,11 @@ export const createStreamingRecorder = (
         onChunkReady(chunkInfo);
         setImmediate(() => recordNextChunk());
       }
-    });
-
-    soxProcess.on('error', (error) => {
+    } catch (error) {
       logger.error({ err: error }, 'Recording error');
-      console.error(chalk.red('\n❌ Recording error:'), error.message);
+      console.error(chalk.red('\n❌ Recording error:'), error instanceof Error ? error.message : String(error));
       stop();
-    });
+    }
   };
 
   const start = (): void => {
@@ -92,8 +78,8 @@ export const createStreamingRecorder = (
   const stop = (): void => {
     isRecording = false;
 
-    if (soxProcess && !soxProcess.killed) {
-      soxProcess.kill('SIGTERM');
+    if (soxProcess) {
+      soxProcess.kill();
     }
   };
 
