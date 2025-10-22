@@ -113,10 +113,10 @@ const parseLogLevel = (value: string | undefined): CliConfig["logLevel"] => {
   return value as CliConfig["logLevel"];
 };
 
-export const parseCliArgs = (): CliConfig => {
+export const parseCliArgs = (argv: string[] = Bun.argv): CliConfig => {
   try {
     const { values, positionals } = parseArgs({
-      args: Bun.argv.slice(2),
+      args: argv.slice(2),
       options: {
         model: { type: "string", short: "m" },
         chunk: { type: "string", short: "c" },
