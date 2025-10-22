@@ -18,7 +18,7 @@ brew install sox
 git clone https://github.com/ocodista/whisper_bun.git
 cd whisper_bun
 bun install
-./install.sh
+sudo ./install.sh
 ```
 
 ### Linux
@@ -39,7 +39,7 @@ sudo pacman -S sox
 git clone https://github.com/ocodista/whisper_bun.git
 cd whisper_bun
 bun install
-./install.sh
+sudo ./install.sh
 ```
 
 ### Windows
