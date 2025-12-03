@@ -1,23 +1,75 @@
 {
-  "name": "listen",
-  "description": "Streaming microphone transcription using Bun and Faster Whisper",
+  "name": "listen-cli",
   "version": "1.0.0",
-  "module": "src/index.ts",
+  "description": "Real-time speech transcription CLI using Bun and Faster Whisper. Speak, see text appear, copy automatically.",
   "type": "module",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./cli": {
+      "import": "./src/cli.ts",
+      "types": "./src/cli.ts"
+    }
+  },
   "bin": {
     "listen": "./bin/cli.ts"
   },
+  "files": [
+    "bin",
+    "src",
+    "scripts",
+    "transcribe.py",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "start": "bun run src/index.ts",
     "build": "./build.sh",
     "install-global": "./install.sh",
     "uninstall-global": "./uninstall.sh",
+    "postinstall": "node scripts/postinstall.mjs",
     "test": "bun test",
-    "typecheck": "bunx tsc --noEmit"
+    "typecheck": "bunx tsc --noEmit",
+    "prepublishOnly": "bun run typecheck && bun test"
   },
+  "keywords": [
+    "whisper",
+    "transcription",
+    "speech-to-text",
+    "voice",
+    "audio",
+    "cli",
+    "bun",
+    "faster-whisper",
+    "real-time",
+    "streaming"
+  ],
+  "author": "ocodista",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ocodista/whisper_bun.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ocodista/whisper_bun/issues"
+  },
+  "homepage": "https://github.com/ocodista/whisper_bun#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
   "devDependencies": {
     "@types/blessed": "^0.1.25",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "bun-types": "^1.3.3"
   },
   "peerDependencies": {
     "typescript": "^5"

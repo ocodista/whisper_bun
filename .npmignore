@@ -1,0 +1,39 @@
+# Development files
+.git
+.github
+.vscode
+.idea
+
+# Build artifacts
+*.log
+temp/
+listen-bin
+node_modules/
+
+# Development scripts (not needed for npm users)
+install.sh
+uninstall.sh
+setup-whisper.sh
+build.sh
+
+# Test files
+*.test.ts
+index.test.ts
+coverage/
+
+# Config files
+.gitignore
+tsconfig.json
+bun.lock
+bunfig.toml
+.env*
+
+# Documentation source (README is included via files)
+CONTRIBUTING.md
+docs/
+
+# Python virtual env and cache
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
