@@ -74,7 +74,29 @@ export const transcribeChunk = async (
     });
 
     transcribe.on('error', (error) => {
-      reject(error);
+      if (error.message.includes('ENOENT')) {
+        if (!existsSync(pythonScript)) {
+          reject(new Error(
+            `Transcription script not found at ${pythonScript}\n` +
+            'Run the postinstall script: npm rebuild listen-cli'
+          ));
+        } else if (pythonCmd === 'python3') {
+          reject(new Error(
+            'Python 3 not found in PATH\n' +
+            'Install Python:\n' +
+            '  macOS:   brew install python3\n' +
+            '  Ubuntu:  sudo apt install python3 python3-venv\n' +
+            '  Fedora:  sudo dnf install python3'
+          ));
+        } else {
+          reject(new Error(
+            `Python venv not found at ${venvPython}\n` +
+            'Run: npm rebuild listen-cli to recreate the environment'
+          ));
+        }
+      } else {
+        reject(error);
+      }
     });
   });
 };

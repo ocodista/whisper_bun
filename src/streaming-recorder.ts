@@ -75,7 +75,25 @@ export const createStreamingRecorder = (
 
     soxProcess.on('error', (error) => {
       logger.error({ err: error }, 'Recording error');
-      console.error(chalk.red('\n❌ Recording error:'), error.message);
+
+      if (error.message.includes('ENOENT') || error.message.includes('spawn sox')) {
+        console.error(chalk.red('\n❌ SoX not found'));
+        console.error(chalk.dim('SoX is required for audio recording.\n'));
+        console.error(chalk.bold('Install SoX:'));
+        console.error(chalk.dim('  macOS:   brew install sox'));
+        console.error(chalk.dim('  Ubuntu:  sudo apt install sox libsox-fmt-all'));
+        console.error(chalk.dim('  Fedora:  sudo dnf install sox\n'));
+      } else if (error.message.includes('permission') || error.message.includes('EACCES')) {
+        console.error(chalk.red('\n❌ Microphone access denied'));
+        console.error(chalk.dim('Grant microphone permission to your terminal app.\n'));
+        console.error(chalk.bold('macOS:'));
+        console.error(chalk.dim('  System Preferences > Security & Privacy > Privacy > Microphone'));
+        console.error(chalk.dim('  Enable access for Terminal/iTerm/your terminal app\n'));
+      } else {
+        console.error(chalk.red('\n❌ Recording error:'), error.message);
+        console.error(chalk.dim('\nTry: listen --log-level debug for more info\n'));
+      }
+
       stop();
     });
   };
