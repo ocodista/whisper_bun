@@ -53,7 +53,8 @@ const main = async (): Promise<void> => {
     transcriber,
     tui,
     config.outputFile,
-    logger
+    logger,
+    { noCopy: config.noCopy, append: config.append }
   );
 
   tui.screen.key(['C-c'], exitHandler);

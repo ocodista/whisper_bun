@@ -1,4 +1,4 @@
-import { writeFileSync } from 'fs';
+import { writeFileSync, appendFileSync, existsSync, readFileSync } from 'fs';
 import chalk from 'chalk';
 import clipboardy from 'clipboardy';
 import { createStreamingRecorder } from '../streaming-recorder';
@@ -7,13 +7,19 @@ import { createTUI } from '../tui';
 import { getDeviceInfo } from '../transcription/transcriber';
 import type { Logger } from '../logger';
 
+export interface ExitOptions {
+  noCopy: boolean;
+  append: boolean;
+}
+
 export const handleExit = (
   updateInterval: NodeJS.Timeout,
   recorder: ReturnType<typeof createStreamingRecorder>,
   transcriber: ReturnType<typeof createStreamingTranscriber>,
   tui: ReturnType<typeof createTUI>,
   outputFile: string,
-  logger: Logger
+  logger: Logger,
+  options: ExitOptions = { noCopy: false, append: false }
 ) => {
   clearInterval(updateInterval);
   recorder.stop();
@@ -38,10 +44,20 @@ export const handleExit = (
 
     if (fullTranscription) {
       logger.info(`Writing transcription to ${outputFile}`);
-      writeFileSync(outputFile, fullTranscription, 'utf-8');
 
-      clipboardy.writeSync(fullTranscription);
-      logger.info('Transcription copied to clipboard');
+      if (options.append && existsSync(outputFile)) {
+        const existing = readFileSync(outputFile, 'utf-8');
+        const separator = existing.endsWith('\n') ? '\n' : '\n\n';
+        appendFileSync(outputFile, separator + fullTranscription, 'utf-8');
+        logger.info('Appended to existing file');
+      } else {
+        writeFileSync(outputFile, fullTranscription, 'utf-8');
+      }
+
+      if (!options.noCopy) {
+        clipboardy.writeSync(fullTranscription);
+        logger.info('Transcription copied to clipboard');
+      }
     }
 
     console.log(chalk.yellow('\n🛑 Recording stopped'));
