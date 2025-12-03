@@ -12,7 +12,10 @@ concurrency:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -30,3 +33,16 @@ jobs:
 
       - name: Run tests
         run: bun test
+
+      - name: Build binary
+        run: bun run build
+
+      - name: Verify binary exists
+        run: |
+          if [ -f "listen-bin" ]; then
+            echo "Binary built successfully"
+            ls -la listen-bin
+          else
+            echo "Binary not found"
+            exit 1
+          fi
